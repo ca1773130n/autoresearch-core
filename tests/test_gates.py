@@ -23,3 +23,9 @@ def test_check_gate_pause_vs_proceed():
     assert paused.proceed is False and paused.pending_gate == "execute"
     assert check_gate(gates, "execute", approved=True).proceed is True
     assert check_gate(GateState(execute=False), "execute", approved=False).proceed is True
+
+
+def test_check_gate_unknown_gate_raises():
+    import pytest
+    with pytest.raises(ValueError):
+        check_gate(GateState(), "nope", approved=False)  # type: ignore[arg-type]
