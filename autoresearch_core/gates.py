@@ -1,0 +1,29 @@
+"""Gate model. Parity with GRD gates.ts.
+
+The config sub-key is `experiment_execution` (NOT `execute`); it controls the
+runtime gate named `execute`. Any value other than literal False leaves it on.
+"""
+from __future__ import annotations
+
+from typing import Any, Mapping
+
+from .types import GateCheck, GateState
+
+
+def resolve_gates(config: Mapping[str, Any], no_gates: bool) -> GateState:
+    if no_gates:
+        return GateState(execute=False, kg_write=False)
+    rg = config.get("research_gates") or {}
+    return GateState(
+        execute=rg.get("experiment_execution") is not False,
+        kg_write=rg.get("kg_write") is not False,
+    )
+
+
+def check_gate(gates: GateState, gate: str, approved: bool) -> GateCheck:
+    """Decide whether to proceed or pause at `gate`. Parity with GRD checkGate
+    (which also sets thread.status='paused'/pendingGate — the caller does that)."""
+    current = getattr(gates, gate)
+    if (not current) or approved:
+        return GateCheck(proceed=True, pending_gate=None)
+    return GateCheck(proceed=False, pending_gate=gate)
