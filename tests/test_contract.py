@@ -35,3 +35,17 @@ def test_validate_metric_spec():
         validate_metric_spec(MetricSpec("", ">=", 0.8))
     with pytest.raises(ValueError):
         validate_metric_spec(MetricSpec("x", "!=", 0.8))  # type: ignore[arg-type]
+
+
+def test_greedy_regex_drops_line_with_trailing_junk_grd_parity():
+    # INTENTIONAL: GRD's runner.ts regex is greedy (\{.*\}), so a line with
+    # trailing JSON-shaped junk captures the whole span, JSON.parse fails, and
+    # the result is dropped. We MATCH that behavior on purpose. Do not "fix" to
+    # non-greedy — that would diverge from GRD. The __RESULT__ contract is one
+    # clean `{json}` per line.
+    assert parse_metrics_line('__RESULT__ {"a": 1} junk {"b": 2}') == {}
+
+
+def test_validate_metric_spec_rejects_bool_target():
+    with pytest.raises(ValueError):
+        validate_metric_spec(MetricSpec("x", ">=", True))  # type: ignore[arg-type]
