@@ -7,7 +7,7 @@ from autoresearch_core.types import MetricSpec, ExperimentResult
 
 def test_public_surface_exports():
     for name in [
-        "MetricSpec", "ExperimentResult", "VerdictRecord", "GateState",
+        "MetricSpec", "ExperimentResult", "VerdictRecord", "GateState", "GateCheck",
         "parse_metrics_line", "classify_run_failure", "compare",
         "DeterministicVerdict", "resolve_gates", "check_gate",
         "decide_branch", "should_terminate", "detect_plateau",

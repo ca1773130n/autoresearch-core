@@ -3,7 +3,7 @@
 __version__ = "0.1.0"
 
 from .types import (
-    Comparator, EvidenceLevel, ExperimentResult, FailureClass, GateState,
+    Comparator, EvidenceLevel, ExperimentResult, FailureClass, GateCheck, GateState,
     Hypothesis, MetricSpec, Takeaway, Verdict, VerdictRecord,
 )
 from .contract import parse_metrics_line, validate_metric_spec
@@ -20,7 +20,7 @@ from .promote import (
 from .ports import Spawn, Retriever, KnowledgeGraph, ExperimentRunner, Store
 
 __all__ = [
-    "Comparator", "EvidenceLevel", "ExperimentResult", "FailureClass", "GateState",
+    "Comparator", "EvidenceLevel", "ExperimentResult", "FailureClass", "GateCheck", "GateState",
     "Hypothesis", "MetricSpec", "Takeaway", "Verdict", "VerdictRecord",
     "parse_metrics_line", "validate_metric_spec", "classify_run_failure",
     "compare", "DeterministicVerdict", "VerdictStrategy", "resolve_gates", "check_gate",
