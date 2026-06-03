@@ -6,8 +6,30 @@ build-backend = "hatchling.build"
 name = "autoresearch-core"
 version = "0.1.1"
 description = "Decision-contracts library: deterministic verdict/gate/failure/promotion logic for autoresearch loops."
+readme = "README.md"
 requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Cameleon X", email = "ca1773130n@gmail.com" }]
+keywords = ["autoresearch", "decision-contracts", "verdict", "research-loop", "deterministic", "agent"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering",
+    "Typing :: Typed",
+]
 dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/ca1773130n/autoresearch-core"
+Repository = "https://github.com/ca1773130n/autoresearch-core"
+Issues = "https://github.com/ca1773130n/autoresearch-core/issues"
+Changelog = "https://github.com/ca1773130n/autoresearch-core/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
 dev = ["pytest>=8.0", "pytest-cov>=5.0"]
