@@ -1,0 +1,19 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "autoresearch-core"
+version = "0.1.0"
+description = "Decision-contracts library: deterministic verdict/gate/failure/promotion logic for autoresearch loops."
+requires-python = ">=3.11"
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["autoresearch_core"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
