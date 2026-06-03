@@ -29,3 +29,15 @@ def test_check_gate_unknown_gate_raises():
     import pytest
     with pytest.raises(ValueError):
         check_gate(GateState(), "nope", approved=False)  # type: ignore[arg-type]
+
+
+def test_resolve_gates_non_dict_research_gates_treated_as_empty():
+    # When research_gates is a non-dict (e.g. True), fall back to defaults (both on).
+    g = resolve_gates({"research_gates": True}, no_gates=False)
+    assert g.execute is True and g.kg_write is True
+
+    g2 = resolve_gates({"research_gates": 1}, no_gates=False)
+    assert g2.execute is True and g2.kg_write is True
+
+    g3 = resolve_gates({"research_gates": "yes"}, no_gates=False)
+    assert g3.execute is True and g3.kg_write is True

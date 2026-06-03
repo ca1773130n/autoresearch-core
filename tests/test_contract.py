@@ -49,3 +49,23 @@ def test_greedy_regex_drops_line_with_trailing_junk_grd_parity():
 def test_validate_metric_spec_rejects_bool_target():
     with pytest.raises(ValueError):
         validate_metric_spec(MetricSpec("x", ">=", True))  # type: ignore[arg-type]
+
+
+def test_parse_metrics_drops_overflow_to_inf():
+    # 1e999 overflows to float('inf') in Python JSON; must be dropped (non-finite guard).
+    assert parse_metrics_line('__RESULT__ {"x": 1e999}') == {}
+
+
+def test_parse_metrics_drops_neg_inf():
+    # -1e999 overflows to float('-inf'); must also be dropped.
+    assert parse_metrics_line('__RESULT__ {"x": -1e999}') == {}
+
+
+def test_validate_metric_spec_rejects_inf_target():
+    with pytest.raises(ValueError):
+        validate_metric_spec(MetricSpec("x", ">=", float("inf")))
+
+
+def test_validate_metric_spec_rejects_nan_target():
+    with pytest.raises(ValueError):
+        validate_metric_spec(MetricSpec("x", ">=", float("nan")))

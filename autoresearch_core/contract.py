@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import math
 import re
 
 from .types import Comparator, MetricSpec
@@ -34,7 +35,7 @@ def parse_metrics_line(stdout: str) -> dict[str, float]:
     for key, value in obj.items():
         if isinstance(value, bool):
             continue
-        if isinstance(value, (int, float)):
+        if isinstance(value, (int, float)) and math.isfinite(value):
             out[str(key)] = float(value)
     return out
 
@@ -47,3 +48,5 @@ def validate_metric_spec(spec: MetricSpec) -> None:
         raise ValueError(f"MetricSpec.comparator must be one of {_COMPARATORS}")
     if not isinstance(spec.target, (int, float)) or isinstance(spec.target, bool):
         raise ValueError("MetricSpec.target must be numeric")
+    if not math.isfinite(spec.target):
+        raise ValueError("MetricSpec.target must be finite")

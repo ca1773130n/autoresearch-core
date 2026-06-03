@@ -33,6 +33,9 @@ class ExperimentResult:
     duration_ms: int = 0
     stdout_excerpt: str = ""
 
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "metrics", dict(self.metrics))
+
 
 @dataclass(frozen=True)
 class VerdictRecord:

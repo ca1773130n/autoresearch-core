@@ -13,7 +13,8 @@ from .types import GateCheck, GateState
 def resolve_gates(config: Mapping[str, Any], no_gates: bool) -> GateState:
     if no_gates:
         return GateState(execute=False, kg_write=False)
-    rg = config.get("research_gates") or {}
+    _rg = config.get("research_gates")
+    rg: dict[str, object] = _rg if isinstance(_rg, dict) else {}
     return GateState(
         execute=rg.get("experiment_execution") is not False,
         kg_write=rg.get("kg_write") is not False,
