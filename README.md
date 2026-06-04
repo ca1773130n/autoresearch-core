@@ -12,8 +12,24 @@ core, with **zero runtime dependencies** and **no I/O**.
 
 You bring the loop, the retrieval, the runner, and the storage; you bind them to
 the library's `Protocol`s and call `measure` / `decide` / `should_promote_dead_end`
-at your decision points. The verdict logic is parity-tested against the GRD
-autoresearch loop.
+at your decision points. The verdict logic is parity-tested against the
+[GRD](https://github.com/ca1773130n/GetResearchDone) autoresearch loop.
+
+## Why
+
+Agentic research loops fail in a predictable way: the model grades its own
+homework. An LLM proposes a hypothesis, runs an experiment, then *judges*
+whether the result supports the hypothesis — and judgment drifts.
+`autoresearch-core` removes the judge from the control path:
+
+1. Every hypothesis must carry a **machine-readable contract**
+   (`MetricSpec`: *which metric, which comparator, which target*).
+2. Experiments report results through a **machine-readable line**
+   (`__RESULT__ {"accuracy": 0.93}` on stdout).
+3. The verdict is **computed, not judged**: metric vs target →
+   `supported` / `refuted` / `inconclusive`.
+4. Only a **deterministic refutation** may auto-promote a dead-end. Anything
+   judged by an LLM or inferred from an exit code is advisory.
 
 ## Install
 
@@ -21,7 +37,7 @@ autoresearch loop.
 pip install autoresearch-core
 ```
 
-Requires Python 3.11+. No runtime dependencies.
+Requires Python 3.11+. No runtime dependencies. Fully typed (`py.typed`).
 
 ## Quickstart
 
@@ -41,18 +57,36 @@ verdict.evidence_level   # "deterministic"
 should_promote_dead_end(verdict)            # True only for a deterministic refutation
 ```
 
+## Documentation
+
+- **[QUICKSTART](https://github.com/ca1773130n/autoresearch-core/blob/main/QUICKSTART.md)** —
+  zero to a working deterministic verdict in five minutes, with a complete
+  runnable script.
+- **[TUTORIAL](https://github.com/ca1773130n/autoresearch-core/blob/main/TUTORIAL.md)** —
+  build a full hypothesis → experiment → measure → learn loop on top of the
+  library: contracts, failure classes, gates, dead-end promotion, infrastructure
+  ports, and custom verdict strategies.
+- **[CHANGELOG](https://github.com/ca1773130n/autoresearch-core/blob/main/CHANGELOG.md)**
+
 ## What it owns (and what it doesn't)
 
 **Owns — the decision discipline:**
-- `MetricSpec` + the `__RESULT__` result contract (`parse_metrics_line`, `validate_metric_spec`)
-- `DeterministicVerdict` / `measure` (metric vs target → supported / refuted / inconclusive)
-- failure classification (`classify_run_failure` → `H2` / `H3` / `H4`)
-- gates (`resolve_gates`, `check_gate`)
-- policy (`decide`, `detect_plateau`, `should_promote_dead_end`)
-- promotion record shapes (`DeadEndRecord`, `KnowhowRecord`, `approach_hash`, `should_skip`)
+
+| Module | Public surface | Job |
+|---|---|---|
+| `types` | `MetricSpec`, `ExperimentResult`, `VerdictRecord`, `Hypothesis`, `Takeaway`, `GateState`, `GateCheck` | Frozen dataclasses; pure data, no logic |
+| `contract` | `parse_metrics_line`, `validate_metric_spec` | The `__RESULT__ {json}` experiment-result contract |
+| `verdict` | `compare`, `DeterministicVerdict`, `VerdictStrategy` | Metric vs target → supported / refuted / inconclusive |
+| `failures` | `classify_run_failure` | stderr → `H2` (missing dep) / `H3` (missing file / permission) / `H4` (timeout / runtime) / `none` |
+| `gates` | `resolve_gates`, `check_gate` | Approval gates (`execute`, `kg_write`) resolved from config |
+| `policy` | `measure`, `decide`, `decide_branch`, `should_terminate`, `detect_plateau`, `should_promote_dead_end` | The loop's branch / terminate / promote decisions |
+| `promote` | `DeadEndRecord`, `KnowhowRecord`, `approach_hash`, `build_dead_end_record`, `should_skip` | Promotion record shapes + approach dedupe |
 
 **Doesn't own — bind these via `ports.py` `Protocol`s to your own infra:**
-`Spawn`, `Retriever`, `KnowledgeGraph`, `ExperimentRunner`, `Store`.
+`Spawn` (LLM call), `Retriever`, `KnowledgeGraph`, `ExperimentRunner`, `Store`.
+No implementations ship in this package; the
+[tutorial](https://github.com/ca1773130n/autoresearch-core/blob/main/TUTORIAL.md)
+shows minimal bindings.
 
 ## Verdict authority
 
@@ -68,6 +102,9 @@ dead-end** — non-deterministic verdicts are advisory. Every verdict records it
 pip install -e ".[dev]"
 pytest -q --cov=autoresearch_core
 ```
+
+The test suite includes a parity suite (`tests/test_parity.py`) that pins
+behaviour to the GRD TypeScript implementation.
 
 ## License
 
