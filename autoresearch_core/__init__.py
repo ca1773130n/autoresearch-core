@@ -1,6 +1,6 @@
 """autoresearch-core: pure-Python decision contracts for autoresearch loops."""
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 
 from .types import (
     Comparator, EvidenceLevel, ExperimentResult, FailureClass, GateCheck, GateState,
