@@ -66,6 +66,9 @@ should_promote_dead_end(verdict)            # True only for a deterministic refu
   build a full hypothesis → experiment → measure → learn loop on top of the
   library: contracts, failure classes, gates, dead-end promotion, infrastructure
   ports, and custom verdict strategies.
+- **[RELEASING](https://github.com/ca1773130n/autoresearch-core/blob/main/RELEASING.md)** —
+  ownership, versioning policy, release procedure, and the shared
+  parity-vector contract with GRD.
 - **[CHANGELOG](https://github.com/ca1773130n/autoresearch-core/blob/main/CHANGELOG.md)**
 
 ## What it owns (and what it doesn't)
