@@ -110,3 +110,90 @@ def test_should_skip_patch():
     h = patch_hash(_patch())
     assert should_skip_patch(h, {h}) is True
     assert should_skip_patch(h, set()) is False
+
+
+import json as _json
+
+from autoresearch_core.rounds import validate_round_patch
+from autoresearch_core.types import AutonomyState
+
+
+def _entry(**over):
+    base = dict(path="commands/x.md", kind="markdown", op="modify",
+                content="body", rationale="because")
+    base.update(over)
+    return PatchEntry(**base)
+
+
+def _vpatch(*entries, confidence=0.8):
+    return RoundPatch(round_id="r1", entries=tuple(entries), summary="s", confidence=confidence)
+
+
+AUTO = AutonomyState()
+
+
+def test_validate_accepts_well_formed_patch():
+    assert validate_round_patch(_vpatch(_entry()), AUTO) == []
+
+
+def test_validate_rejects_empty_patch_and_bad_confidence():
+    errs = validate_round_patch(_vpatch(confidence=1.5), AUTO)
+    assert any("no entries" in e for e in errs)
+    assert any("confidence" in e for e in errs)
+
+
+def test_validate_rejects_traversal_absolute_and_git_paths():
+    for bad in ("../etc/passwd", "/etc/passwd", ".git/config", "a/../../b", "C:\\x"):
+        errs = validate_round_patch(_vpatch(_entry(path=bad)), AUTO)
+        assert errs, bad
+
+
+def test_validate_rejects_kind_outside_allowed_targets():
+    md_only = AutonomyState(allowed_targets=("markdown",))
+    errs = validate_round_patch(_vpatch(_entry(kind="code", path="lib/x.ts")), md_only)
+    assert any("allowed_targets" in e for e in errs)
+
+
+def test_validate_content_rules():
+    errs = validate_round_patch(_vpatch(_entry(op="delete", content="x")), AUTO)
+    assert any("delete must not carry content" in e for e in errs)
+    errs = validate_round_patch(_vpatch(_entry(content=None)), AUTO)
+    assert any("requires content" in e for e in errs)
+    errs = validate_round_patch(_vpatch(_entry(rationale="  ")), AUTO)
+    assert any("rationale" in e for e in errs)
+
+
+def test_validate_deny_list():
+    errs = validate_round_patch(
+        _vpatch(_entry(path="bin/harness_driver.py", kind="code")), AUTO,
+        deny_paths=("bin/harness_driver.py",),
+    )
+    assert any("deny-listed" in e for e in errs)
+
+
+def test_validate_config_kind_must_be_json():
+    errs = validate_round_patch(
+        _vpatch(_entry(path="some.json", kind="config", content="{not json")), AUTO)
+    assert any("valid JSON" in e for e in errs)
+
+
+def test_validate_protects_harness_config_block():
+    current = {"autonomy": "review", "kill_switch": False}
+    sneaky = _json.dumps({"harness": {"autonomy": "auto", "kill_switch": False}})
+    errs = validate_round_patch(
+        _vpatch(_entry(path=".planning/config.json", kind="config", content=sneaky)),
+        AUTO, current_harness=current)
+    assert any("harness config block" in e for e in errs)
+
+    unchanged = _json.dumps({"harness": current, "other": 1})
+    errs = validate_round_patch(
+        _vpatch(_entry(path=".planning/config.json", kind="config", content=unchanged)),
+        AUTO, current_harness=current)
+    assert errs == []
+
+
+def test_validate_may_not_delete_project_config():
+    errs = validate_round_patch(
+        _vpatch(_entry(path=".planning/config.json", kind="config", op="delete", content=None)),
+        AUTO)
+    assert any("may not delete the project config" in e for e in errs)
