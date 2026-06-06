@@ -197,3 +197,50 @@ def test_validate_may_not_delete_project_config():
         _vpatch(_entry(path=".planning/config.json", kind="config", op="delete", content=None)),
         AUTO)
     assert any("may not delete the project config" in e for e in errs)
+
+
+from autoresearch_core.rounds import decide_round, should_apply
+from autoresearch_core.types import EvalCheck, EvalReport
+
+GREEN = EvalReport(checks=(EvalCheck("lint", 0),))
+RED = EvalReport(checks=(EvalCheck("jest", 1, "boom"),))
+
+
+def test_should_apply_kill_switch_blocks_everything():
+    a = AutonomyState(mode="auto", kill_switch=True)
+    out = should_apply(GREEN, a, confidence=1.0)
+    assert out.proceed is False and out.pending_gate == "kill_switch"
+
+
+def test_should_apply_eval_failure_blocks():
+    out = should_apply(RED, AutonomyState(mode="auto"), confidence=1.0)
+    assert out.proceed is False and out.pending_gate == "eval_failed"
+
+
+def test_should_apply_review_mode_waits():
+    out = should_apply(GREEN, AutonomyState(mode="review"), confidence=1.0)
+    assert out.proceed is False and out.pending_gate == "harness_review"
+
+
+def test_should_apply_low_confidence_waits():
+    out = should_apply(GREEN, AutonomyState(mode="auto", min_confidence=0.9), confidence=0.5)
+    assert out.proceed is False and out.pending_gate == "low_confidence"
+
+
+def test_should_apply_auto_green_confident_proceeds():
+    out = should_apply(GREEN, AutonomyState(mode="auto", min_confidence=0.7), confidence=0.8)
+    assert out.proceed is True and out.pending_gate is None
+
+
+def test_decide_round_full_matrix():
+    ok = _vpatch(_entry())
+    auto = AutonomyState(mode="auto")
+
+    assert decide_round(ok, AutonomyState(kill_switch=True), set(), GREEN)[0] == "skipped"
+    assert decide_round(_vpatch(), auto, set(), GREEN)[0] == "rejected"
+    seen = {patch_hash(ok)}
+    assert decide_round(ok, auto, seen, GREEN)[0] == "skipped"
+    assert decide_round(ok, auto, set(), RED)[0] == "rejected"
+    status, detail = decide_round(ok, AutonomyState(mode="review"), set(), GREEN)
+    assert status == "evaluated" and "review" in detail
+    assert decide_round(ok, auto, set(), GREEN)[0] == "applied"
