@@ -78,3 +78,35 @@ def test_select_evidence_caps_at_max_items():
 def test_select_evidence_below_min_returns_empty():
     fs = [_f("takeaway", "only one", "2026-01-01")]
     assert select_evidence(fs, max_items=10, min_items=3) == ()
+
+
+from autoresearch_core.rounds import patch_hash, should_skip_patch
+from autoresearch_core.types import PatchEntry, RoundPatch
+
+
+def _patch(summary="tighten executor prompt", path="commands/execute-phase.md"):
+    e = PatchEntry(path=path, kind="markdown", op="modify", content="x", rationale="r")
+    return RoundPatch(round_id="r1", entries=(e,), summary=summary, confidence=0.8)
+
+
+def test_patch_hash_stable_16_hex():
+    h = patch_hash(_patch())
+    assert h == patch_hash(_patch())
+    assert len(h) == 16 and int(h, 16) >= 0
+
+
+def test_patch_hash_ignores_case_whitespace_and_round_id():
+    a = _patch(summary="Tighten   Executor prompt")
+    b = RoundPatch(round_id="r999", entries=_patch().entries,
+                   summary="tighten executor prompt", confidence=0.1)
+    assert patch_hash(a) == patch_hash(b)
+
+
+def test_patch_hash_differs_on_different_target():
+    assert patch_hash(_patch()) != patch_hash(_patch(path="agents/grd-executor.md"))
+
+
+def test_should_skip_patch():
+    h = patch_hash(_patch())
+    assert should_skip_patch(h, {h}) is True
+    assert should_skip_patch(h, set()) is False
