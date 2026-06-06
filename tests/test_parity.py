@@ -13,6 +13,11 @@ def test_public_surface_exports():
         "decide_branch", "should_terminate", "detect_plateau",
         "should_promote_dead_end", "measure", "decide",
         "approach_hash", "build_dead_end_record",
+        "Finding", "PatchEntry", "RoundPatch", "EvalCheck", "EvalReport",
+        "AutonomyState", "RoundRecord",
+        "resolve_autonomy", "select_evidence", "validate_round_patch",
+        "patch_hash", "should_skip_patch", "should_apply", "decide_round",
+        "FindingsSource", "PatchProposer", "RoundEvaluator", "Applier", "RoundStore",
     ]:
         assert hasattr(ac, name), f"missing public export: {name}"
 

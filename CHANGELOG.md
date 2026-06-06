@@ -4,6 +4,15 @@ All notable changes to `autoresearch-core` are documented here. The format
 follows [Keep a Changelog](https://keepachangelog.com/), and the project
 adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.2.0] - 2026-06-06
+### Added
+- Life-harness rounds (pure): `Finding`/`PatchEntry`/`RoundPatch`/`EvalReport`/
+  `AutonomyState`/`RoundRecord` types; `rounds.py` policy (`resolve_autonomy`,
+  `select_evidence`, `validate_round_patch` with path guards + self-protection,
+  `patch_hash` dedupe, `should_apply`, `decide_round`); adapter protocols
+  `FindingsSource`/`PatchProposer`/`RoundEvaluator`/`Applier`/`RoundStore`.
+  Design: docs/superpowers/specs/2026-06-06-life-harness-rounds-design.md.
+
 ## [0.1.2] - 2026-06-04
 ### Added
 - `QUICKSTART.md` (zero to a working verdict, complete runnable script) and
