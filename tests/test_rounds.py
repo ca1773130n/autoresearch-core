@@ -112,6 +112,17 @@ def test_should_skip_patch():
     assert should_skip_patch(h, set()) is False
 
 
+def test_patch_hash_no_separator_collision():
+    one = RoundPatch(round_id="r", entries=(
+        PatchEntry(path="a | b.md", kind="markdown", op="modify", content="x", rationale="r"),
+    ), summary="s", confidence=0.5)
+    two = RoundPatch(round_id="r", entries=(
+        PatchEntry(path="a", kind="markdown", op="modify", content="x", rationale="r"),
+        PatchEntry(path="b.md", kind="markdown", op="modify", content="x", rationale="r"),
+    ), summary="s", confidence=0.5)
+    assert patch_hash(one) != patch_hash(two)
+
+
 import json as _json
 
 from autoresearch_core.rounds import validate_round_patch
@@ -197,6 +208,13 @@ def test_validate_may_not_delete_project_config():
         _vpatch(_entry(path=".planning/config.json", kind="config", op="delete", content=None)),
         AUTO)
     assert any("may not delete the project config" in e for e in errs)
+
+
+def test_resolve_autonomy_min_confidence_boundaries():
+    assert resolve_autonomy({"harness": {"min_confidence": 0.0}}).min_confidence == 0.0
+    assert resolve_autonomy({"harness": {"min_confidence": 1.0}}).min_confidence == 1.0
+    assert resolve_autonomy({"harness": {"min_confidence": -0.001}}).min_confidence == 0.7
+    assert resolve_autonomy({"harness": {"min_confidence": 1.001}}).min_confidence == 0.7
 
 
 from autoresearch_core.rounds import decide_round, should_apply

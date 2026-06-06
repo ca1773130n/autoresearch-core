@@ -33,11 +33,8 @@ def resolve_autonomy(config: Mapping[str, Any], no_gates: bool = False) -> Auton
         targets = _ALL_TARGETS
 
     conf = h.get("min_confidence")
-    min_confidence = (
-        float(conf)
-        if isinstance(conf, (int, float)) and not isinstance(conf, bool) and 0.0 <= float(conf) <= 1.0
-        else 0.7
-    )
+    _conf_float = float(conf) if isinstance(conf, (int, float)) and not isinstance(conf, bool) else None
+    min_confidence = _conf_float if _conf_float is not None and 0.0 <= _conf_float <= 1.0 else 0.7
 
     hours = h.get("min_interval_hours")
     min_interval = hours if isinstance(hours, int) and not isinstance(hours, bool) and hours >= 0 else 24
@@ -73,7 +70,7 @@ def select_evidence(
 def patch_hash(patch: RoundPatch) -> str:
     """Stable, case/whitespace-insensitive dedupe hash (round_id/confidence excluded)."""
     parts = sorted(f"{e.op} {e.kind} {e.path}".lower() for e in patch.entries)
-    normalized = re.sub(r"\s+", " ", " | ".join(parts + [patch.summary.strip().lower()]))
+    normalized = re.sub(r"\s+", " ", "\x00".join(parts + [patch.summary.strip().lower()]))
     return hashlib.sha256(normalized.encode("utf-8")).hexdigest()[:16]
 
 
@@ -142,14 +139,14 @@ def validate_round_patch(
                 parsed = json.loads(e.content)
             except ValueError:
                 errors.append(f"{tag}: config patch is not valid JSON")
-                continue
-            if (
-                e.path == config_path
-                and current_harness is not None
-                and isinstance(parsed, dict)
-                and parsed.get("harness") != dict(current_harness)
-            ):
-                errors.append(f"{tag}: round may not modify its own harness config block")
+            else:
+                if (
+                    e.path == config_path
+                    and current_harness is not None
+                    and isinstance(parsed, dict)
+                    and parsed.get("harness") != dict(current_harness)
+                ):
+                    errors.append(f"{tag}: round may not modify its own harness config block")
     return errors
 
 
