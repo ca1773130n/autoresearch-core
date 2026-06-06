@@ -47,3 +47,34 @@ def test_resolve_autonomy_no_gates_forces_auto_but_not_kill_switch():
 def test_resolve_autonomy_empty_targets_falls_back():
     a = resolve_autonomy({"harness": {"allowed_targets": []}})
     assert a.allowed_targets == ("markdown", "config", "code")
+
+
+from autoresearch_core.rounds import select_evidence
+from autoresearch_core.types import Finding
+
+
+def _f(kind, content, at):
+    return Finding(kind=kind, content=content, source="s", created_at=at)
+
+
+def test_select_evidence_priority_order():
+    fs = [_f("question", "q", "2026-01-01"), _f("takeaway", "t", "2026-01-01"),
+          _f("insight", "i", "2026-01-01"), _f("decision", "d", "2026-01-01")]
+    out = select_evidence(fs, max_items=10, min_items=1)
+    assert [x.kind for x in out] == ["takeaway", "decision", "insight", "question"]
+
+
+def test_select_evidence_recency_breaks_ties():
+    fs = [_f("takeaway", "old", "2026-01-01"), _f("takeaway", "new", "2026-02-01")]
+    out = select_evidence(fs, max_items=10, min_items=1)
+    assert [x.content for x in out] == ["new", "old"]
+
+
+def test_select_evidence_caps_at_max_items():
+    fs = [_f("insight", f"i{i}", "2026-01-01") for i in range(30)]
+    assert len(select_evidence(fs, max_items=5, min_items=1)) == 5
+
+
+def test_select_evidence_below_min_returns_empty():
+    fs = [_f("takeaway", "only one", "2026-01-01")]
+    assert select_evidence(fs, max_items=10, min_items=3) == ()
