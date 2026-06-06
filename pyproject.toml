@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "autoresearch-core"
-version = "0.2.0"
+version = "0.4.3"
 description = "Decision-contracts library: deterministic verdict/gate/failure/promotion logic for autoresearch loops."
 readme = "README.md"
 requires-python = ">=3.11"

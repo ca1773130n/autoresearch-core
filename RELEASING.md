@@ -17,17 +17,21 @@ pin it, and how parity with the GRD reference implementation is kept.
   [`parity/vectors.json`](parity/vectors.json) `_meta.excluded_deviations`
   and in the [tutorial](TUTORIAL.md).
 
-## Versioning (SemVer, 0.x phase)
+## Versioning (locked to GRD's version line since 0.4.3)
 
-- **Patch (`0.1.z`)** — docs, fixes that don't change any verdict/gate/parse
-  outcome for valid inputs. Always safe for consumers.
-- **Minor (`0.y.0`)** — anything that changes public API shape or an
-  outcome for some input, including hardening. In the 0.x phase a minor IS
-  the breaking boundary.
-- Consumers therefore pin **`>=0.1.x,<0.2`** (Agented) or an exact `==`
-  (HypePaper). Both upgrade *explicitly* — never via an unpinned range. A
-  `0.2.0` requires a deliberate bump + changelog read in each consumer.
-- `1.0.0` when the API survives a full GRD milestone without shape changes.
+- **As of 0.4.3 this package version-tracks GRD** (the reference
+  implementation): a release that accompanies GRD vX.Y.Z carries the same
+  X.Y.Z. Operator decision, 2026-06-07. Versions 0.2.x–0.4.2 of this package
+  never existed (0.1.x predates the lock).
+- Within the lock, SemVer intent still applies: a release that changes any
+  verdict/gate/parse/round outcome or the public API surface must say so in
+  the CHANGELOG — consumers read it before bumping.
+- Consumers pin explicitly (Agented `>=…,<…` range, HypePaper exact `==`) and
+  upgrade *deliberately* — never via an unpinned range. NOTE: Agented's
+  historical `>=0.1.1,<0.2` pin keeps it on 0.1.2 until it deliberately moves
+  to the locked line.
+- `1.0.0` when the API survives a full GRD milestone without shape changes
+  (and GRD reaches 1.0).
 
 ## Release procedure
 

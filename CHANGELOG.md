@@ -4,7 +4,11 @@ All notable changes to `autoresearch-core` are documented here. The format
 follows [Keep a Changelog](https://keepachangelog.com/), and the project
 adheres to [Semantic Versioning](https://semver.org/).
 
-## [0.2.0] - 2026-06-06
+## [0.4.3] - 2026-06-07
+### Changed
+- **Versioning now tracks GRD's version line** (GRD is the reference
+  implementation): this release ships what was staged as 0.2.0, renumbered to
+  match GRD v0.4.3. Versions 0.2.x–0.4.2 of this package never existed.
 ### Added
 - Life-harness rounds (pure): `Finding`/`PatchEntry`/`RoundPatch`/`EvalReport`/
   `AutonomyState`/`RoundRecord` types; `rounds.py` policy (`resolve_autonomy`,
