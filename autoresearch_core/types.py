@@ -77,3 +77,76 @@ class GateState:
 class GateCheck:
     proceed: bool
     pending_gate: str | None = None
+
+
+FindingKind = Literal["insight", "decision", "question", "todo", "hypothesis", "takeaway"]
+PatchKind = Literal["markdown", "config", "code"]
+PatchOp = Literal["modify", "create", "delete"]
+AutonomyMode = Literal["review", "auto"]
+RoundStatus = Literal[
+    "skipped", "gathered", "proposed", "validated", "evaluated", "applied", "rejected", "reverted"
+]
+
+
+@dataclass(frozen=True)
+class Finding:
+    """One Tesserae Session finding projected into the kernel."""
+    kind: FindingKind
+    content: str
+    source: str
+    created_at: str = ""
+
+
+@dataclass(frozen=True)
+class PatchEntry:
+    path: str
+    kind: PatchKind
+    op: PatchOp
+    content: str | None
+    rationale: str
+    evidence_refs: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class RoundPatch:
+    round_id: str
+    entries: tuple[PatchEntry, ...]
+    summary: str
+    confidence: float
+
+
+@dataclass(frozen=True)
+class EvalCheck:
+    name: str
+    exit_code: int
+    detail: str = ""
+
+
+@dataclass(frozen=True)
+class EvalReport:
+    checks: tuple[EvalCheck, ...]
+
+    @property
+    def passed(self) -> bool:
+        return all(c.exit_code == 0 for c in self.checks)
+
+
+@dataclass(frozen=True)
+class AutonomyState:
+    mode: AutonomyMode = "review"
+    kill_switch: bool = False
+    min_confidence: float = 0.7
+    min_interval_hours: int = 24
+    allowed_targets: tuple[PatchKind, ...] = ("markdown", "config", "code")
+
+
+@dataclass(frozen=True)
+class RoundRecord:
+    round_id: str
+    status: RoundStatus
+    detail: str = ""
+    evidence_count: int = 0
+    patch_hash: str | None = None
+    eval_report: EvalReport | None = None
+    applied_sha: str | None = None
+    created_at: str = ""
