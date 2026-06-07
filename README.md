@@ -7,8 +7,10 @@
 
 A tiny, **pure-Python decision-contracts library** for autoresearch / agentic
 loops: a *deterministic* verdict (metric / comparator / target), failure
-classification, gates, and promotion record shapes — the disciplined decision
-core, with **zero runtime dependencies** and **no I/O**.
+classification, gates, promotion record shapes, and — since 0.4.3 —
+**life-harness round contracts** (evidence-driven self-improvement policy) —
+the disciplined decision core, with **zero runtime dependencies** and
+**no I/O**.
 
 You bring the loop, the retrieval, the runner, and the storage; you bind them to
 the library's `Protocol`s and call `measure` / `decide` / `should_promote_dead_end`
@@ -84,10 +86,12 @@ should_promote_dead_end(verdict)            # True only for a deterministic refu
 | `gates` | `resolve_gates`, `check_gate` | Approval gates (`execute`, `kg_write`) resolved from config |
 | `policy` | `measure`, `decide`, `decide_branch`, `should_terminate`, `detect_plateau`, `should_promote_dead_end` | The loop's branch / terminate / promote decisions |
 | `promote` | `DeadEndRecord`, `KnowhowRecord`, `approach_hash`, `build_dead_end_record`, `should_skip` | Promotion record shapes + approach dedupe |
+| `rounds` | `resolve_autonomy`, `select_evidence`, `validate_round_patch`, `patch_hash`, `should_apply`, `decide_round` (+ `Finding`, `PatchEntry`, `RoundPatch`, `EvalReport`, `AutonomyState`, `RoundRecord` in `types`) | Life-harness rounds: the policy for patching a harness's own primitives from session evidence |
 
 **Doesn't own — bind these via `ports.py` `Protocol`s to your own infra:**
-`Spawn` (LLM call), `Retriever`, `KnowledgeGraph`, `ExperimentRunner`, `Store`.
-No implementations ship in this package; the
+`Spawn` (LLM call), `Retriever`, `KnowledgeGraph`, `ExperimentRunner`, `Store`,
+and for rounds: `FindingsSource`, `PatchProposer`, `RoundEvaluator`, `Applier`,
+`RoundStore`. No implementations ship in this package; the
 [tutorial](https://github.com/ca1773130n/autoresearch-core/blob/main/TUTORIAL.md)
 shows minimal bindings.
 
@@ -98,6 +102,36 @@ strategies (an LLM judge, an exit-code check) can be plugged in via the
 `VerdictStrategy` protocol, but **only a deterministic refutation auto-promotes a
 dead-end** — non-deterministic verdicts are advisory. Every verdict records its
 `strategy` and `evidence_level`, so the decision trail stays auditable.
+
+## Life-harness rounds (0.4.3)
+
+The same discipline, pointed at the harness itself: a **round** turns session
+evidence (e.g. Tesserae-compiled takeaways) into one eval-gated, reversible
+patch to the host's own primitives. The kernel owns the *decisions* — evidence
+selection, patch validation (path guards + a self-protection deny-list: a round
+can never patch its own driver or autonomy config), dedupe, and the apply gate
+(kill switch > eval > review-mode > confidence). Hosts bind the I/O through
+five protocols and keep the forge in git: one commit per round, revert =
+`git revert`.
+
+```python
+from autoresearch_core import (
+    AutonomyState, EvalCheck, EvalReport, PatchEntry, RoundPatch, decide_round,
+)
+
+patch = RoundPatch(round_id="r1", entries=(
+    PatchEntry(path="commands/execute-phase.md", kind="markdown", op="modify",
+               content="...", rationale="executor keeps forgetting to commit"),
+), summary="commit reminder in executor prompt", confidence=0.9)
+
+decide_round(patch, AutonomyState(), set(), EvalReport(checks=(EvalCheck("lint", 0),)))
+# ('evaluated', 'awaiting review (harness_review)')   — review mode is the default
+```
+
+Reference host: GRD's `gd harness round`. Design:
+[life-harness rounds spec](https://github.com/ca1773130n/autoresearch-core/blob/main/docs/superpowers/specs/2026-06-06-life-harness-rounds-design.md).
+Note: the package version is locked to GRD's version line from 0.4.3 onward
+(see [RELEASING](https://github.com/ca1773130n/autoresearch-core/blob/main/RELEASING.md)).
 
 ## Development
 

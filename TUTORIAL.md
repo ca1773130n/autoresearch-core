@@ -4,8 +4,8 @@ This tutorial builds, step by step, a minimal but complete
 **hypothesis → experiment → measure → learn** loop on top of
 `autoresearch-core`. Along the way it covers every public surface of the
 library: the contract, the deterministic verdict, failure classes, decision
-policy, dead-end promotion, gates, the infrastructure ports, and custom
-verdict strategies.
+policy, dead-end promotion, gates, the infrastructure ports, custom verdict
+strategies, and the life-harness round contracts (§11).
 
 If you just want a working verdict in five minutes, read
 [QUICKSTART.md](QUICKSTART.md) first — this tutorial assumes you've seen it.
@@ -432,7 +432,59 @@ runs); they can never *conclude*. Every `VerdictRecord` carries its `strategy`
 and `evidence_level`, so an audit of the decision trail always shows which
 authority produced which conclusion.
 
-## 11. Parity with GRD
+## 11. Life-harness rounds: the loop pointed at itself (0.4.3)
+
+Everything above measures *experiments*. The `rounds` module applies the same
+discipline to the harness's own evolution: session evidence in, one
+eval-gated, reversible patch to the harness's primitives out.
+
+The shape mirrors the research loop deliberately:
+
+| Research loop | Life-harness round |
+|---|---|
+| `Hypothesis` | `RoundPatch` (one focused change + rationale + confidence) |
+| experiment run | host applies the patch in a scratch worktree |
+| `ExperimentResult` | `EvalReport` (lint/tests/structural checks as `EvalCheck`s) |
+| deterministic verdict | `should_apply` gate (kill switch > eval > review-mode > confidence) |
+| dead-end promotion | `patch_hash` dedupe — a deterministically rejected patch is never re-proposed |
+| gates | `AutonomyState` (`resolve_autonomy(config)`: review-mode default, opt-in auto, kill switch) |
+
+```python
+from autoresearch_core import (
+    AutonomyState, EvalCheck, EvalReport, Finding, PatchEntry, RoundPatch,
+    decide_round, patch_hash, resolve_autonomy, select_evidence,
+)
+
+# 1. Evidence (your host queries it — e.g. Tesserae session findings)
+evidence = select_evidence([
+    Finding(kind="takeaway", content="executor forgets to commit", source="s1"),
+    Finding(kind="decision", content="always run lint first", source="s2"),
+    Finding(kind="insight", content="plans drift after wave 3", source="s3"),
+], max_items=25, min_items=3)
+
+# 2. A proposal agent turns evidence into ONE patch (host-bound via PatchProposer)
+patch = RoundPatch(round_id="r1", entries=(
+    PatchEntry(path="commands/execute-phase.md", kind="markdown", op="modify",
+               content="...", rationale=evidence[0].content),
+), summary="commit reminder in executor prompt", confidence=0.9)
+
+# 3. The kernel decides; the host acts
+autonomy = resolve_autonomy({"harness": {"autonomy": "review"}})
+status, detail = decide_round(patch, autonomy, seen_hashes=set(),
+                              eval_report=EvalReport(checks=(EvalCheck("lint", 0),)))
+# ('evaluated', 'awaiting review (harness_review)')
+```
+
+Safety is kernel-enforced: paths must be repo-relative (no `..`, never
+`.git/`), patch kinds must be within `allowed_targets`, and a deny-list plus a
+`current_harness` check stop a round from patching its own driver or autonomy
+config. Hosts bind five protocols (`FindingsSource`, `PatchProposer`,
+`RoundEvaluator`, `Applier`, `RoundStore`) and anchor every applied round to a
+git commit, so revert is `git revert`. The reference host is GRD's
+`gd harness round`; the full design is in
+[docs/superpowers/specs/2026-06-06-life-harness-rounds-design.md](docs/superpowers/specs/2026-06-06-life-harness-rounds-design.md).
+
+## 12. Parity with GRD
 
 The behaviour here is parity-tested (`tests/test_parity.py`) against the
 TypeScript implementation in [GRD](https://github.com/ca1773130n/GetResearchDone)

@@ -121,5 +121,6 @@ echo "__RESULT__ {\"accuracy\": $ACC}"                        # shell
 
 - **[TUTORIAL.md](TUTORIAL.md)** — build a full hypothesis → experiment →
   measure → learn loop: failure classes, gates, dead-end promotion and dedupe,
-  binding your own runner/store via ports, and custom verdict strategies.
+  binding your own runner/store via ports, custom verdict strategies, and the
+  life-harness round contracts (self-improvement policy, §11).
 - **[README.md](README.md)** — the API map and the design rationale.
