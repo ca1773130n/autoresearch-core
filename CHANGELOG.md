@@ -4,6 +4,12 @@ All notable changes to `autoresearch-core` are documented here. The format
 follows [Keep a Changelog](https://keepachangelog.com/), and the project
 adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.4.4] - 2026-06-08
+### Changed
+- Docs: README now documents the life-harness rounds surface (section + API
+  map row + ports); TUTORIAL §11 and QUICKSTART pointer added. No code change —
+  released to keep the version lock with GRD v0.4.4 and refresh the PyPI page.
+
 ## [0.4.3] - 2026-06-07
 ### Changed
 - **Versioning now tracks GRD's version line** (GRD is the reference
