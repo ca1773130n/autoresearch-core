@@ -149,4 +149,7 @@ class RoundRecord:
     patch_hash: str | None = None
     eval_report: EvalReport | None = None
     applied_sha: str | None = None
+    # Ancestor this round branched from (the prior applied_sha). Enables DGM-style
+    # lineage/reseeding later; pure data, no behaviour change in the kernel.
+    parent_sha: str | None = None
     created_at: str = ""
