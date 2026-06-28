@@ -54,3 +54,11 @@ def test_round_record_optionals_default_none():
     r = RoundRecord(round_id="r1", status="skipped")
     assert r.patch_hash is None and r.eval_report is None and r.applied_sha is None
     assert r.detail == "" and r.evidence_count == 0
+
+
+def test_round_record_parent_sha_lineage():
+    """parent_sha records which ancestor a round branched from (DGM-style lineage)."""
+    r = RoundRecord(round_id="r1", status="skipped")
+    assert r.parent_sha is None
+    r2 = RoundRecord(round_id="r2", status="applied", applied_sha="abc123", parent_sha="def456")
+    assert r2.parent_sha == "def456"
