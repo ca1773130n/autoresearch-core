@@ -4,7 +4,7 @@ All notable changes to `autoresearch-core` are documented here. The format
 follows [Keep a Changelog](https://keepachangelog.com/), and the project
 adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.4.7] - 2026-06-28
 ### Added
 - `RoundRecord.parent_sha` (`str | None`, default `None`): records the ancestor
   commit a round branched from (the prior `applied_sha`), enabling DGM-style
